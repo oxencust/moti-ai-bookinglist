@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>預約資訊登記 - 衡點健康</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+    <style>
+        :root {
+            --white: #ffffff;
+            --gray: #808080;
+            --green: #7ac19a;
+            --green-light: #e2ede6;
+            --green-dark: #5f846f;
+            --pink: #f2ac98;
+            --pink-light: #faece8;
+            --pink-dark: #c67566;
+            --yellow: #ffe08b;
+            --yellow-light: #fcf4e3;
+            --blue: #9fcccc;
+            --blue-light: #daedec;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--green-light) 0%, var(--blue-light) 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 24px 20px;
+            background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+            color: var(--white);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(95, 132, 111, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(95, 132, 111, 0.1);
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--green-dark);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--green);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .form-label .required {
+            color: var(--pink-dark);
+            margin-left: 4px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px var(--green-light);
+        }
+        
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 6px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .booking-type-btns {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .type-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: var(--white);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            color: #666;
+        }
+        
+        .type-btn:hover {
+            border-color: var(--green);
+            background: #f8fdf8;
+        }
+        
+        .type-btn.active {
+            border-color: var(--green);
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: var(--green-dark);
+        }
+        
+        .type-btn.active[data-type="new"] {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #2E7D32;
+        }
+        
+        .type-btn.active[data-type="retest"] {
+            border-color: #2196F3;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1565C0;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(95, 132, 111, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: var(--white);
+            color: var(--green-dark);
+            border: 2px solid var(--green);
+            margin-top: 12px;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--green-light);
+        }
+        
+        /* 待預約列表 */
+        .list-section {
+            margin-top: 24px;
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .list-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--green-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .list-count {
+            background: var(--pink);
+            color: var(--white);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .booking-item {
+            background: var(--green-light);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .booking-item:hover {
+            transform: translateX(4px);
+        }
+        
+        .booking-info {
+            flex: 1;
+        }
+        
+        .booking-name {
+            font-weight: 600;
+            color: var(--green-dark);
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
+        
+        .booking-details {
+            font-size: 0.9rem;
+            color: var(--gray);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .booking-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-delete {
+            background: var(--pink-light);
+            color: var(--pink-dark);
+        }
+        
+        .btn-delete:hover {
+            background: var(--pink);
+            color: var(--white);
+        }
+        
+        .btn-edit {
+            background: var(--yellow-light);
+            color: var(--yellow-dark);
+        }
+        
+        .btn-edit:hover {
+            background: var(--yellow);
+            color: #333;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-box {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--green-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .modal-actions .btn {
+            flex: 1;
+        }
+        
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+        
+        .btn-cancel-full {
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            background: #f5f5f5;
+            color: #666;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-cancel-full:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-danger {
+            background: var(--pink);
+            color: var(--white);
+        }
+        
+        .btn-danger:hover {
+            background: var(--pink-dark);
+        }
+        
+        /* 編輯 Modal 學員資訊 */
+        .edit-member-info {
+            background: var(--green-light);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .edit-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(95, 132, 111, 0.2);
+        }
+        
+        .edit-info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .edit-info-label {
+            color: var(--green-dark);
+            font-size: 0.9rem;
+        }
+        
+        .edit-info-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .empty-list {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-list-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--green-dark);
+            color: var(--white);
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .toast.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .toast.error {
+            background: var(--pink-dark);
+        }
+        
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--green-light);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 16px;
+            color: var(--green-dark);
+            font-size: 1rem;
+        }
+        
+        /* 搜尋樣式 */
+        .search-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-row .form-input {
+            flex: 1;
+        }
+        
+        .search-row-inline {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .search-row-inline .form-input {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .datetime-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .datetime-row .form-input {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .time-select-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+        }
+        
+        .time-select {
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .time-colon {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--green-dark);
+        }
+        
+        .btn-search {
+            padding: 12px 14px;
+            background: var(--green);
+            color: var(--white);
+            border: 2px solid var(--green);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-search:hover {
+            background: var(--green-dark);
+            border-color: var(--green-dark);
+        }
+        
+        .search-results {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--green-light);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: var(--green);
+            color: var(--white);
+        }
+        
+        .search-result-info {
+            flex: 1;
+        }
+        
+        .search-result-name {
+            font-weight: 600;
+        }
+        
+        .search-result-details {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .search-no-result {
+            padding: 12px;
+            text-align: center;
+            color: var(--gray);
+        }
+        
+        .search-multiple-hint {
+            padding: 10px 12px;
+            background: var(--yellow-light);
+            border: 1px solid var(--yellow);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            color: var(--yellow-dark);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--green-dark);
+            font-size: 0.85rem;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 20px 16px;
+            }
+            
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .modal-box {
+                margin: 16px;
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            
+            .header {
+                padding: 16px 12px;
+                border-radius: 12px;
+            }
+            
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .header p {
+                font-size: 0.85rem;
+            }
+            
+            .card {
+                padding: 16px;
+                border-radius: 12px;
+                margin-bottom: 12px;
+            }
+            
+            .card-title {
+                font-size: 1rem;
+            }
+            
+            .form-input {
+                padding: 10px 14px;
+                font-size: 0.95rem;
+            }
+            
+            .search-row-inline {
+                flex-wrap: wrap;
+            }
+            
+            .search-row-inline .form-input {
+                flex: 1 1 calc(50% - 5px);
+                min-width: 100px;
+            }
+            
+            .btn-search {
+                width: 100%;
+                margin-top: 8px;
+                height: 44px;
+            }
+            
+            .booking-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .booking-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .modal-box {
+                margin: 8px;
+                padding: 16px;
+                max-width: none;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+            }
+            
+            .modal-actions .btn {
+                width: 100%;
+            }
+            
+            .edit-info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+        }
+        
+        /* 平板橫向 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                max-width: 600px;
+            }
+        }
+        
+        /* 桌面 */
+        @media (min-width: 1025px) {
+            .container {
+                max-width: 700px;
+            }
+            
+            .booking-list {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .empty-list {
+                grid-column: 1 / -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 預約資訊登記</h1>
+            <p>行政人員預填 Moti 體態分析預約</p>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">📝 新增預約</div>
+            
+            <div class="form-group">
+                <label class="form-label">預約日期時間<span class="required">*</span></label>
+                <div class="datetime-row">
+                    <input type="date" class="form-input" id="bookingDate" required>
+                    <div class="time-select-row">
+                        <select class="form-input time-select" id="bookingHour">
+                            <option value="">時</option>
+                            <option value="00">00</option>
+                            <option value="01">01</option>
+                            <option value="02">02</option>
+                            <option value="03">03</option>
+                            <option value="04">04</option>
+                            <option value="05">05</option>
+                            <option value="06">06</option>
+                            <option value="07">07</option>
+                            <option value="08">08</option>
+                            <option value="09">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                        </select>
+                        <span class="time-colon">:</span>
+                        <select class="form-input time-select" id="bookingMinute">
+                            <option value="">分</option>
+                            <option value="00">00</option>
+                            <option value="01">01</option>
+                            <option value="02">02</option>
+                            <option value="03">03</option>
+                            <option value="04">04</option>
+                            <option value="05">05</option>
+                            <option value="06">06</option>
+                            <option value="07">07</option>
+                            <option value="08">08</option>
+                            <option value="09">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                            <option value="32">32</option>
+                            <option value="33">33</option>
+                            <option value="34">34</option>
+                            <option value="35">35</option>
+                            <option value="36">36</option>
+                            <option value="37">37</option>
+                            <option value="38">38</option>
+                            <option value="39">39</option>
+                            <option value="40">40</option>
+                            <option value="41">41</option>
+                            <option value="42">42</option>
+                            <option value="43">43</option>
+                            <option value="44">44</option>
+                            <option value="45">45</option>
+                            <option value="46">46</option>
+                            <option value="47">47</option>
+                            <option value="48">48</option>
+                            <option value="49">49</option>
+                            <option value="50">50</option>
+                            <option value="51">51</option>
+                            <option value="52">52</option>
+                            <option value="53">53</option>
+                            <option value="54">54</option>
+                            <option value="55">55</option>
+                            <option value="56">56</option>
+                            <option value="57">57</option>
+                            <option value="58">58</option>
+                            <option value="59">59</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">搜尋學員<span class="required">*</span></label>
+                <div class="search-row-inline">
+                    <input type="text" class="form-input" id="memberName" placeholder="姓名">
+                    <input type="tel" class="form-input" id="memberPhone" placeholder="電話">
+                    <button class="btn btn-search" onclick="searchMember()">🔍</button>
+                </div>
+                <div class="form-hint">輸入姓名或電話搜尋，如有重複可選擇正確學員</div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">學員編號（自動帶入）</label>
+                <input type="text" class="form-input" id="memberId" placeholder="搜尋後自動帶入" readonly style="background: #f5f5f5;">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">預約類型<span class="required">*</span></label>
+                <div class="booking-type-btns">
+                    <button type="button" class="type-btn" data-type="new" onclick="selectBookingType('new')">
+                        🆕 新客
+                    </button>
+                    <button type="button" class="type-btn" data-type="retest" onclick="selectBookingType('retest')">
+                        🔄 複測
+                    </button>
+                </div>
+                <input type="hidden" id="bookingType" value="">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">分析師<span class="required">*</span></label>
+                <select class="form-input" id="analystName">
+                    <option value="">載入中...</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" id="submitBtn" onclick="submitBooking()">
+                新增預約
+            </button>
+        </div>
+        
+        <div class="card">
+            <div class="list-header">
+                <div class="list-title">📋 待檢測名冊</div>
+                <span class="list-count" id="listCount">0 筆</span>
+            </div>
+            
+            <div class="booking-list" id="bookingList">
+                <div class="empty-list" id="emptyList">
+                    <div class="empty-list-icon">📭</div>
+                    <p>目前沒有待檢測的預約</p>
+                </div>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="loadBookings()">
+                🔄 重新整理
+            </button>
+        </div>
+        
+        <div class="footer">
+            <p>衡點健康</p>
+        </div>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">處理中...</div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <div class="modal-title">✏️ 編輯預約</div>
+            
+            <!-- 學員資訊（唯讀） -->
+            <div class="edit-member-info" id="editMemberInfo">
+                <div class="edit-info-row">
+                    <span class="edit-info-label">👤 姓名</span>
+                    <span class="edit-info-value" id="editMemberNameDisplay">-</span>
+                </div>
+                <div class="edit-info-row">
+                    <span class="edit-info-label">📱 電話</span>
+                    <span class="edit-info-value" id="editMemberPhoneDisplay">-</span>
+                </div>
+                <div class="edit-info-row">
+                    <span class="edit-info-label">🔖 編號</span>
+                    <span class="edit-info-value" id="editMemberIdDisplay">-</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">預約日期時間<span class="required">*</span></label>
+                <div class="datetime-row">
+                    <input type="date" class="form-input" id="editBookingDate" required>
+                    <div class="time-select-row">
+                        <select class="form-input time-select" id="editBookingHour">
+                            <option value="">時</option>
+                            <option value="00">00</option>
+                            <option value="01">01</option>
+                            <option value="02">02</option>
+                            <option value="03">03</option>
+                            <option value="04">04</option>
+                            <option value="05">05</option>
+                            <option value="06">06</option>
+                            <option value="07">07</option>
+                            <option value="08">08</option>
+                            <option value="09">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                        </select>
+                        <span class="time-colon">:</span>
+                        <select class="form-input time-select" id="editBookingMinute">
+                            <option value="">分</option>
+                            <option value="00">00</option>
+                            <option value="01">01</option>
+                            <option value="02">02</option>
+                            <option value="03">03</option>
+                            <option value="04">04</option>
+                            <option value="05">05</option>
+                            <option value="06">06</option>
+                            <option value="07">07</option>
+                            <option value="08">08</option>
+                            <option value="09">09</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                            <option value="17">17</option>
+                            <option value="18">18</option>
+                            <option value="19">19</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                            <option value="32">32</option>
+                            <option value="33">33</option>
+                            <option value="34">34</option>
+                            <option value="35">35</option>
+                            <option value="36">36</option>
+                            <option value="37">37</option>
+                            <option value="38">38</option>
+                            <option value="39">39</option>
+                            <option value="40">40</option>
+                            <option value="41">41</option>
+                            <option value="42">42</option>
+                            <option value="43">43</option>
+                            <option value="44">44</option>
+                            <option value="45">45</option>
+                            <option value="46">46</option>
+                            <option value="47">47</option>
+                            <option value="48">48</option>
+                            <option value="49">49</option>
+                            <option value="50">50</option>
+                            <option value="51">51</option>
+                            <option value="52">52</option>
+                            <option value="53">53</option>
+                            <option value="54">54</option>
+                            <option value="55">55</option>
+                            <option value="56">56</option>
+                            <option value="57">57</option>
+                            <option value="58">58</option>
+                            <option value="59">59</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 隱藏欄位 -->
+            <input type="hidden" id="editMemberName">
+            <input type="hidden" id="editMemberPhone">
+            <input type="hidden" id="editMemberId">
+            <input type="hidden" id="editBookingType">
+            <div class="form-group">
+    <label class="form-label">分析師<span class="required">*</span></label>
+    <select class="form-input" id="editAnalystName">
+        <option value="">載入中...</option>
+    </select>
+</div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="deleteFromEdit()">🗑️ 刪除預約</button>
+                <button class="btn btn-primary" onclick="saveEdit()">確認</button>
+            </div>
+            <button class="btn btn-cancel-full" onclick="closeEditModal()">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // 設定
+        var CONFIG = {
+            MAKE_WEBHOOK_URL: 'https://hook.us2.make.com/1vlpk9mi3brkuyjeshskelendt4t5hwe',
+            EDGE_FUNCTION_URL: 'https://mnjilhpztnowaplggvkk.supabase.co/functions/v1/moti-api'
+        };
+
+        // Edge Function 呼叫助手
+        async function callEdge(action, params) {
+            params = params || {};
+            var res = await fetch(CONFIG.EDGE_FUNCTION_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.assign({ action: action }, params))
+            });
+            if (!res.ok) throw new Error('Edge Function error: ' + res.status);
+            return res.json();
+        }
+
+        // 安全解析 JSON（處理控制字元）
+        async function safeParseJSON(response) {
+            var text = await response.text();
+            text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+            return JSON.parse(text);
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 設定預設日期為今天
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('bookingDate').value = today;
+            
+            // 載入分析師列表
+            loadAnalysts();
+            
+            // 載入待預約列表
+            loadBookings();
+            
+            // Enter 鍵搜尋
+            document.getElementById('memberName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchMember();
+            });
+            document.getElementById('memberPhone').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchMember();
+            });
+        });
+        
+        // 搜尋學員
+        async function searchMember() {
+            var name = document.getElementById('memberName').value.trim();
+            var phone = document.getElementById('memberPhone').value.trim();
+            
+            // 可以用姓名或電話搜尋
+            if (!name && !phone) {
+                showToast('請輸入姓名或電話', 'error');
+                return;
+            }
+            
+            var container = document.getElementById('searchResults');
+            container.innerHTML = '<div class="search-no-result">搜尋中...</div>';
+            
+            try {
+                var result = await callEdge('search_member', { keyword: name || phone, name: name, phone: phone });
+                console.log('搜尋結果:', result);
+                
+                // 處理回傳的資料（支援 member 單數或 members 複數格式）
+                var members = [];
+                if (result.success) {
+                    // 支援 members 陣列格式
+                    if (result.members) {
+                        if (Array.isArray(result.members)) {
+                            members = result.members;
+                        } else if (typeof result.members === 'object') {
+                            members = [result.members];
+                        }
+                    }
+                    // 支援 member 單一物件格式
+                    if (result.member && typeof result.member === 'object') {
+                        members.push(result.member);
+                    }
+                }
+                
+                // 過濾掉無效資料（null、空物件、無姓名）
+                members = members.filter(function(m) {
+                    return m && m.name && m.name !== 'null' && m.name !== 'undefined';
+                });
+                
+                if (members.length > 0) {
+                    var html = '';
+                    
+                    // 如果有多筆結果，顯示提示
+                    if (members.length > 1) {
+                        html += '<div class="search-multiple-hint">⚠️ 找到 ' + members.length + ' 位學員，請選擇正確的人員：</div>';
+                    }
+                    
+                    members.forEach(function(member) {
+                        // 處理可能的 null 值
+                        var memberId = (member.id && member.id !== 'null') ? member.id : '';
+                        var memberName = member.name || '';
+                        var memberPhone = (member.phone && member.phone !== 'null') ? member.phone : '';
+                        
+                        // 跳過無效資料
+                        if (!memberName) return;
+                        
+                        html += '<div class="search-result-item" onclick="selectMember(\'' + 
+                            escapeQuotes(memberId) + '\', \'' + 
+                            escapeQuotes(memberName) + '\', \'' + 
+                            escapeQuotes(memberPhone) + '\')">';
+                        html += '<div class="search-result-info">';
+                        html += '<div class="search-result-name">' + escapeHtml(memberName) + '</div>';
+                        html += '<div class="search-result-details">';
+                        if (memberId) html += '🏷️ ' + escapeHtml(memberId) + ' · ';
+                        html += '📱 ' + (memberPhone ? escapeHtml(memberPhone) : '無電話');
+                        html += '</div></div>';
+                        html += '<span>選擇 →</span>';
+                        html += '</div>';
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="search-no-result">查無此學員，可直接手動填寫</div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<div class="search-no-result">搜尋失敗</div>';
+            }
+        }
+        
+        // 跳脫引號
+        function escapeQuotes(str) {
+            if (!str) return '';
+            return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+        
+        // 跳脫 HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+        
+        // 選擇學員
+        function selectMember(id, name, phone) {
+            document.getElementById('memberId').value = id;
+            document.getElementById('memberName').value = name;
+            document.getElementById('memberPhone').value = phone;
+            document.getElementById('searchResults').innerHTML = '';
+            showToast('已選擇：' + name);
+        }
+        
+        // 選擇預約類型
+        function selectBookingType(type) {
+            // 移除所有 active
+            document.querySelectorAll('.type-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            // 設定選中的按鈕
+            document.querySelector('.type-btn[data-type="' + type + '"]').classList.add('active');
+            // 更新隱藏欄位
+            document.getElementById('bookingType').value = type;
+        }
+        
+        // 新增預約
+        async function submitBooking() {
+            var date = document.getElementById('bookingDate').value;
+            var hour = document.getElementById('bookingHour').value;
+            var minute = document.getElementById('bookingMinute').value;
+            var time = (hour && minute) ? (hour + ':' + minute) : '';
+            var name = document.getElementById('memberName').value.trim();
+            var phone = document.getElementById('memberPhone').value.trim();
+            var memberId = document.getElementById('memberId').value.trim();
+            var bookingType = document.getElementById('bookingType').value;
+            var analystName = document.getElementById('analystName').value;
+            
+            // 驗證
+            if (!date || !hour || !minute || !name || !phone) {
+                showToast('請填寫所有必填欄位', 'error');
+                return;
+            }
+            
+            if (!bookingType) {
+                showToast('請選擇預約類型（新客/複測）', 'error');
+                return;
+            }
+            
+            if (!analystName) {
+                showToast('請選擇分析師', 'error');
+                return;
+            }
+
+            // 計算結束時間（+1小時）
+            var startParts = time.split(':');
+            var endHour = (parseInt(startParts[0]) + 1) % 24;
+            var bookingEndTime = (endHour < 10 ? '0' + endHour : endHour) + ':' + startParts[1];
+
+            // 計算顯示用日期時間
+            var startDatetime = date + ' ' + time;
+            var endDatetime = date + ' ' + bookingEndTime;
+
+            showLoading('新增預約中...');
+            
+            try {
+                var response = await fetch(CONFIG.MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                
+                    body: JSON.stringify({
+                        action: 'booking',
+                        type: 'add',
+                        bookingDate: date,
+                        bookingTime: time,
+                        bookingEndTime: bookingEndTime,
+                        startDatetime: startDatetime,
+                        endDatetime: endDatetime,
+                        memberName: name,
+                        memberPhone: phone,
+                        memberId: memberId,
+                        bookingType: bookingType,
+                        analystName: analystName
+                    })
+                });
+                
+                var result = await safeParseJSON(response);
+                
+                if (result.success) {
+                    showToast('預約新增成功！');
+                    // 清空表單
+                    document.getElementById('bookingHour').value = '';
+                    document.getElementById('bookingMinute').value = '';
+                    document.getElementById('memberName').value = '';
+                    document.getElementById('memberPhone').value = '';
+                    document.getElementById('memberId').value = '';
+                    // 重置預約類型為未選擇
+                    document.querySelectorAll('.type-btn').forEach(function(btn) {
+                        btn.classList.remove('active');
+                    });
+                    document.getElementById('bookingType').value = '';
+                    document.getElementById('analystName').value = '';
+                    // 重新載入列表
+                    loadBookings();
+                } else {
+                    showToast(result.message || '新增失敗', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('新增失敗，請稍後再試', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 載入分析師列表
+        async function loadAnalysts() {
+            var select = document.getElementById('analystName');
+            var editSelect = document.getElementById('editAnalystName');
+            try {
+                var result = await callEdge('list_analysts');
+                
+                if (result.success && Array.isArray(result.analysts)) {
+                    var html = '<option value="">請選擇分析師</option>';
+                    result.analysts.forEach(function(coach) {
+                        var name = coach.coach_name || coach.name || coach.real_name || '';
+                        if (name) {
+                            html += '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>';
+                        }
+                    });
+                    select.innerHTML = html;
+                    editSelect.innerHTML = html;
+                } else {
+                    select.innerHTML = '<option value="">載入失敗，請重新整理</option>';
+                    editSelect.innerHTML = '<option value="">載入失敗，請重新整理</option>';
+                }
+            } catch (error) {
+                console.error('載入分析師失敗:', error);
+                select.innerHTML = '<option value="">載入失敗，請重新整理</option>';
+                editSelect.innerHTML = '<option value="">載入失敗，請重新整理</option>';
+            }
+        }
+        
+        // 載入預約列表
+        async function loadBookings() {
+            try {
+                var result = await callEdge('list');
+                console.log('預約列表回傳:', result);
+                
+                if (result.success && result.bookings && Array.isArray(result.bookings)) {
+                    // 過濾掉空資料
+                    var validBookings = result.bookings.filter(function(b) {
+                        return b && (b.member_name || b.memberName);
+                    });
+                    renderBookings(validBookings);
+                } else {
+                    renderBookings([]);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                renderBookings([]);
+            }
+        }
+        
+        // 渲染預約列表
+        function renderBookings(bookings) {
+            var container = document.getElementById('bookingList');
+            var countEl = document.getElementById('listCount');
+            
+            // 確保是陣列
+            if (!Array.isArray(bookings)) {
+                bookings = [];
+            }
+            
+            countEl.textContent = bookings.length + ' 筆';
+            
+            if (bookings.length === 0) {
+                container.innerHTML = '<div class="empty-list" id="emptyList"><div class="empty-list-icon">📭</div><p>目前沒有待檢測的預約</p></div>';
+                return;
+            }
+            
+            var html = '';
+            bookings.forEach(function(booking) {
+                console.log('booking 資料:', booking);
+                // 支援 snake_case 和 camelCase 兩種格式，並處理 null 值
+                var id = booking.id || '';
+                var memberId = booking.member_id || booking.memberId || booking.memberid || '';
+                var memberName = booking.member_name || booking.memberName || '';
+                var memberPhone = booking.member_phone || booking.memberPhone || '';
+                var bookingDate = booking.booking_date || booking.bookingDate || '';
+                var bookingTime = booking.booking_time || booking.bookingTime || '';
+                var bookingType = booking.booking_type || booking.bookingType || '';
+                var analystName = booking.analyst_name || booking.analystName || '';
+                
+                // 處理 null 字串
+                if (memberId === 'null' || memberId === 'undefined') memberId = '';
+                if (memberName === 'null' || memberName === 'undefined') memberName = '';
+                if (memberPhone === 'null' || memberPhone === 'undefined') memberPhone = '';
+                
+                // 跳過無效資料
+                if (!memberName) return;
+                
+                console.log('解析後 memberId:', memberId);
+                
+                html += '<div class="booking-item" id="booking-' + id + '">';
+                html += '<div class="booking-info">';
+                html += '<div class="booking-name">' + escapeHtml(memberName) + '</div>';
+                html += '<div class="booking-details">';
+                html += '<span>📅 ' + escapeHtml(bookingDate) + ' ' + escapeHtml(bookingTime) + '</span>';
+                if (memberId) {
+                    html += '<span>🏷️ ' + escapeHtml(memberId) + '</span>';
+                }
+                html += '<span>📱 ' + (memberPhone ? escapeHtml(memberPhone) : '-') + '</span>';
+                if (analystName) {
+                    html += '<span>🔬 ' + escapeHtml(analystName) + '</span>';
+                }
+                html += '</div></div>';
+                html += '<div class="booking-actions">';
+                html += '<button class="btn-icon btn-edit" onclick="openEditModal(' + id + ', \'' + escapeQuotes(bookingDate) + '\', \'' + escapeQuotes(bookingTime) + '\', \'' + escapeQuotes(memberName) + '\', \'' + escapeQuotes(memberPhone) + '\', \'' + escapeQuotes(memberId) + '\', \'' + escapeQuotes(bookingType) + '\', \'' + escapeQuotes(analystName) + '\')" title="編輯">✏️</button>';
+                html += '</div></div>';
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 編輯預約
+        var editingBookingId = null;
+        
+        // 記錄原始日期時間
+        var originalDate = '';
+        var originalTime = '';
+        var originalEndTime = '';
+        
+        function openEditModal(id, date, time, name, phone, memberId, bookingType, analystName) {
+            editingBookingId = id;
+            originalDate = date;
+            originalTime = time;
+            var origStartParts = time.split(':');
+            var origEndHour = (parseInt(origStartParts[0]) + 1) % 24;
+            originalEndTime = (origEndHour < 10 ? '0' + origEndHour : origEndHour) + ':' + origStartParts[1];
+            // 顯示學員資訊（唯讀）
+            document.getElementById('editMemberNameDisplay').textContent = name || '-';
+            document.getElementById('editMemberPhoneDisplay').textContent = phone || '-';
+            document.getElementById('editMemberIdDisplay').textContent = memberId || '-';
+            // 設定隱藏欄位
+            document.getElementById('editMemberName').value = name;
+            document.getElementById('editMemberPhone').value = phone;
+            document.getElementById('editMemberId').value = memberId;
+            // 設定日期
+            document.getElementById('editBookingDate').value = date;
+            // 設定時間下拉選單（格式：HH:MM）
+            if (time && time.includes(':')) {
+                var timeParts = time.split(':');
+                document.getElementById('editBookingHour').value = timeParts[0];
+                document.getElementById('editBookingMinute').value = timeParts[1];
+            } else {
+                document.getElementById('editBookingHour').value = '';
+                document.getElementById('editBookingMinute').value = '';
+            }
+            document.getElementById('editBookingType').value = bookingType || '';
+            // 等分析師列表載入完成後設定選中值
+var editSelect = document.getElementById('editAnalystName');
+if (editSelect.options.length <= 1) {
+    // 還在載入中，稍等後再設定
+    setTimeout(function() {
+        editSelect.value = analystName || '';
+    }, 500);
+} else {
+    editSelect.value = analystName || '';
+}
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        function closeEditModal() {
+            editingBookingId = null;
+            originalDate = '';
+            originalTime = '';
+            originalEndTime = '';
+            document.getElementById('editModal').classList.remove('active');
+        }
+        
+        // 從編輯視窗刪除
+        async function deleteFromEdit() {
+            if (!editingBookingId) return;
+            
+            var name = document.getElementById('editMemberNameDisplay').textContent;
+            var phone = document.getElementById('editMemberPhoneDisplay').textContent;
+            var bookingType = document.getElementById('editBookingType').value;
+            var analystName = document.getElementById('editAnalystName').value;
+            
+            if (!confirm('確定要刪除「' + name + '」的預約嗎？\n\n預約時間：' + originalDate + ' ' + originalTime)) return;
+            
+            var idToDelete = editingBookingId;
+            closeEditModal();
+            await deleteBooking(idToDelete, name, phone, originalDate, originalTime, bookingType, analystName);
+        }
+        
+        async function saveEdit() {
+            if (!editingBookingId) return;
+            
+            var date = document.getElementById('editBookingDate').value;
+            var hour = document.getElementById('editBookingHour').value;
+            var minute = document.getElementById('editBookingMinute').value;
+            var time = (hour && minute) ? (hour + ':' + minute) : '';
+            var name = document.getElementById('editMemberName').value;
+            var phone = document.getElementById('editMemberPhone').value;
+            var memberId = document.getElementById('editMemberId').value;
+            
+            if (!date || !hour || !minute) {
+                showToast('請填寫日期和時間', 'error');
+                return;
+            }
+            
+            // 檢查是否有變更
+            if (date !== originalDate || time !== originalTime) {
+                var confirmMsg = '確認變更預約時間？\n\n' +
+                    '原時間：' + originalDate + ' ' + originalTime + '\n' +
+                    '新時間：' + date + ' ' + time;
+                if (!confirm(confirmMsg)) return;
+            }
+
+            // 計算結束時間（+1小時）
+            var startParts = time.split(':');
+            var endHour = (parseInt(startParts[0]) + 1) % 24;
+            var bookingEndTime = (endHour < 10 ? '0' + endHour : endHour) + ':' + startParts[1];
+
+            // 計算顯示用日期時間
+            var startDatetime = date + ' ' + time;
+            var endDatetime = date + ' ' + bookingEndTime;
+
+            showLoading('儲存中...');
+            
+            try {
+                var response = await fetch(CONFIG.MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'booking',
+                        type: 'update',
+                        id: editingBookingId,
+                        bookingDate: date,
+                        bookingTime: time,
+                        bookingEndTime: bookingEndTime,
+                        originalDate: originalDate,
+                        originalTime: originalTime,
+                        originalEndTime: originalEndTime,
+                        startDatetime: startDatetime,
+                        endDatetime: endDatetime,
+                        memberName: name,
+                        memberPhone: phone,
+                        memberId: memberId,
+                        analystName: document.getElementById('editAnalystName').value || ''
+                    })
+                });
+                
+                var result = await safeParseJSON(response);
+                
+                if (result.success) {
+                    showToast('已更新');
+                    closeEditModal();
+                    loadBookings();
+                } else {
+                    showToast(result.message || '更新失敗', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('更新失敗', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // 刪除預約
+        async function deleteBooking(id, memberName, memberPhone, bookingDate, bookingTime, bookingType, analystName) {
+            if (!id) return;
+            
+            showLoading('刪除中...');
+            
+            try {
+                var response = await fetch(CONFIG.MAKE_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'booking',
+                        type: 'delete',
+                        id: id,
+                        memberName: memberName || '',
+                        memberPhone: memberPhone || '',
+                        bookingDate: bookingDate || '',
+                        bookingTime: bookingTime || '',
+                        bookingType: bookingType || '',
+                        analystName: analystName || ''
+                    })
+                });
+                
+                var result = await safeParseJSON(response);
+                
+                if (result.success) {
+                    showToast('已刪除');
+                    loadBookings();
+                } else {
+                    showToast(result.message || '刪除失敗', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('刪除失敗', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // 工具函數
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text || '處理中...';
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+        
+        function showToast(message, type) {
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast' + (type === 'error' ? ' error' : '');
+            toast.classList.add('active');
+            setTimeout(function() {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
