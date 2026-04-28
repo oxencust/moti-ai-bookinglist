@@ -1287,9 +1287,9 @@
             showLoading('新增預約中...');
             
             try {
-                // 改由 Edge Function 寫 moti_bookings；moti-api 會用同樣 payload 轉送 Make 跑 Calendar + LINE
+                // 改由 Edge Function 寫 moti_bookings；moti-api 會補上 action='booking' 後轉送 Make 跑 Calendar + LINE
+                // 注意：不能傳 action 欄位（會跟 callEdge 外層 action 撞），由 Edge Function 補
                 var result = await callEdge('createBooking', {
-                    action: 'booking',
                     type: 'add',
                     booking_datetime: startDatetime,
                     booking_end_datetime: endDatetime,
@@ -1633,9 +1633,9 @@ if (editSelect.options.length <= 1) {
             showLoading('儲存中...');
             
             try {
-                // 改由 Edge Function 寫 moti_bookings；moti-api 會用同樣 payload 轉送 Make 跑 Calendar + LINE
+                // 改由 Edge Function 寫 moti_bookings；moti-api 會補上 action='booking' 後轉送 Make 跑 Calendar + LINE
+                // 注意：不能傳 action 欄位（會跟 callEdge 外層 action 撞），由 Edge Function 補
                 var result = await callEdge('updateBooking', {
-                    action: 'booking',
                     type: 'update',
                     id: editingBookingId,
                     booking_datetime: startDatetime,
@@ -1677,9 +1677,9 @@ if (editSelect.options.length <= 1) {
             showLoading('刪除中...');
             
             try {
-                // 改由 Edge Function 直接從 moti_bookings 硬刪；moti-api 會用同樣 payload 轉送 Make 跑 Calendar + LINE
+                // 改由 Edge Function 直接從 moti_bookings 硬刪；moti-api 會補上 action='booking' 後轉送 Make 跑 Calendar + LINE
+                // 注意：不能傳 action 欄位（會跟 callEdge 外層 action 撞），由 Edge Function 補
                 var result = await callEdge('deleteBooking', {
-                    action: 'booking',
                     type: 'delete',
                     id: id,
                     memberName: memberName || '',
