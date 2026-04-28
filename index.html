@@ -1268,6 +1268,13 @@
                 return;
             }
 
+            // 衝突檢查：同一分析師於該時段是否已有預約
+            var conflict = hasAnalystConflict(analystName, date, time, null);
+            if (conflict) {
+                showToast('⚠️ ' + analystName + ' 於 ' + conflict.bookingDate + ' ' + conflict.bookingTime + ' 已有預約（' + conflict.memberName + '），請換時段或換分析師', 'error');
+                return;
+            }
+
             // 計算結束時間（+1小時）
             var startParts = time.split(':');
             var endHour = (parseInt(startParts[0]) + 1) % 24;
@@ -1280,30 +1287,24 @@
             showLoading('新增預約中...');
             
             try {
-                var response = await fetch(CONFIG.MAKE_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                
-                    body: JSON.stringify({
-                        action: 'booking',
-                        type: 'add',
-                        booking_datetime: startDatetime,
-                        booking_end_datetime: endDatetime,
-                        bookingDate: date,
-                        bookingTime: time,
-                        bookingEndTime: bookingEndTime,
-                        startDatetime: startDatetime,
-                        endDatetime: endDatetime,
-                        memberName: name,
-                        memberPhone: phone,
-                        memberId: memberId,
-                        bookingType: bookingType,
-                        analystName: analystName
-                    })
+                // 改由 Edge Function 寫 moti_bookings；moti-api 會用同樣 payload 轉送 Make 跑 Calendar + LINE
+                var result = await callEdge('createBooking', {
+                    action: 'booking',
+                    type: 'add',
+                    booking_datetime: startDatetime,
+                    booking_end_datetime: endDatetime,
+                    bookingDate: date,
+                    bookingTime: time,
+                    bookingEndTime: bookingEndTime,
+                    startDatetime: startDatetime,
+                    endDatetime: endDatetime,
+                    memberName: name,
+                    memberPhone: phone,
+                    memberId: memberId,
+                    bookingType: bookingType,
+                    analystName: analystName
                 });
-                
-                var result = await safeParseJSON(response);
-                
+
                 if (result.success) {
                     showToast('預約新增成功！');
                     // 清空表單
@@ -1364,18 +1365,21 @@
             try {
                 var result = await callEdge('list');
                 console.log('預約列表回傳:', result);
-                
+
                 if (result.success && result.bookings && Array.isArray(result.bookings)) {
                     // 過濾掉空資料
                     var validBookings = result.bookings.filter(function(b) {
                         return b && (b.member_name || b.memberName);
                     });
+                    allBookings = validBookings;  // 寫入 cache 供 hasAnalystConflict 使用
                     renderBookings(validBookings);
                 } else {
+                    allBookings = [];
                     renderBookings([]);
                 }
             } catch (error) {
                 console.error('Error:', error);
+                allBookings = [];
                 renderBookings([]);
             }
         }
@@ -1450,6 +1454,67 @@
             container.innerHTML = html;
         }
         
+        // 衝突檢查用：載入到的所有預約 cache（loadBookings 時更新）
+        var allBookings = [];
+
+        // 將 datetime 字串標準化為 "YYYY-MM-DD HH:MM"（用於字典序比較）
+        function normalizeDt(dt) {
+            if (!dt) return '';
+            return String(dt).replace('T', ' ').substring(0, 16);
+        }
+
+        // 檢查同一分析師於同時段是否已有預約（時段重疊判定）
+        // 回傳衝突筆，無衝突回傳 null
+        // excludeId：編輯模式時排除自己這筆
+        function hasAnalystConflict(analystName, date, time, excludeId) {
+            if (!analystName || !date || !time) return null;
+
+            // 計算新預約起迄（每筆預約預設 1 小時）
+            var sp = time.split(':');
+            var eh = (parseInt(sp[0]) + 1) % 24;
+            var endTime = (eh < 10 ? '0' + eh : eh) + ':' + sp[1];
+            var newStart = normalizeDt(date + ' ' + time);
+            var newEnd   = normalizeDt(date + ' ' + endTime);
+
+            for (var i = 0; i < allBookings.length; i++) {
+                var b = allBookings[i];
+                if (excludeId && String(b.id) === String(excludeId)) continue;
+
+                var bAnalyst = b.analyst_name || b.analystName || '';
+                if (bAnalyst !== analystName) continue;
+
+                // 推算現有預約起迄
+                var bStartRaw = b.booking_datetime
+                    || ((b.booking_date || b.bookingDate || '') + ' ' + (b.booking_time || b.bookingTime || ''));
+                var bEndRaw = b.booking_end_datetime || '';
+                if (!bEndRaw) {
+                    // 沒有 end，用 start +1 小時推
+                    var bTimeStr = b.booking_time || b.bookingTime || '';
+                    var bDateStr = b.booking_date || b.bookingDate || '';
+                    if (bTimeStr) {
+                        var bp = bTimeStr.split(':');
+                        var beh = (parseInt(bp[0]) + 1) % 24;
+                        var bet = (beh < 10 ? '0' + beh : beh) + ':' + bp[1];
+                        bEndRaw = bDateStr + ' ' + bet;
+                    }
+                }
+                var bStart = normalizeDt(bStartRaw);
+                var bEnd   = normalizeDt(bEndRaw);
+                if (!bStart || !bEnd) continue;
+
+                // 時段重疊判定：[newStart, newEnd) 與 [bStart, bEnd) 有交集
+                if (newStart < bEnd && newEnd > bStart) {
+                    return {
+                        analystName: bAnalyst,
+                        memberName: b.member_name || b.memberName || '已預約',
+                        bookingDate: bStart.substring(0, 10),
+                        bookingTime: bStart.substring(11, 16)
+                    };
+                }
+            }
+            return null;
+        }
+
         // 編輯預約
         var editingBookingId = null;
         
@@ -1546,6 +1611,16 @@ if (editSelect.options.length <= 1) {
                 if (!confirm(confirmMsg)) return;
             }
 
+            // 衝突檢查：同一分析師於該時段是否已有其他預約（排除目前正在編輯的這筆）
+            var editAnalyst = document.getElementById('editAnalystName').value || '';
+            if (editAnalyst) {
+                var editConflict = hasAnalystConflict(editAnalyst, date, time, editingBookingId);
+                if (editConflict) {
+                    showToast('⚠️ ' + editAnalyst + ' 於 ' + editConflict.bookingDate + ' ' + editConflict.bookingTime + ' 已有預約（' + editConflict.memberName + '），請換時段或換分析師', 'error');
+                    return;
+                }
+            }
+
             // 計算結束時間（+1小時）
             var startParts = time.split(':');
             var endHour = (parseInt(startParts[0]) + 1) % 24;
@@ -1558,33 +1633,28 @@ if (editSelect.options.length <= 1) {
             showLoading('儲存中...');
             
             try {
-                var response = await fetch(CONFIG.MAKE_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'booking',
-                        type: 'update',
-                        id: editingBookingId,
-                        booking_datetime: startDatetime,
-                        booking_end_datetime: endDatetime,
-                        bookingDate: date,
-                        bookingTime: time,
-                        bookingEndTime: bookingEndTime,
-                        startDatetime: startDatetime,
-                        endDatetime: endDatetime,
-                        originalDate: originalDate,
-                        originalTime: originalTime,
-                        originalEndTime: originalEndTime,
-                        memberName: name,
-                        memberPhone: phone,
-                        memberId: memberId,
-                        bookingType: document.getElementById('editBookingType').value || '',
-                        analystName: document.getElementById('editAnalystName').value || ''
-                    })
+                // 改由 Edge Function 寫 moti_bookings；moti-api 會用同樣 payload 轉送 Make 跑 Calendar + LINE
+                var result = await callEdge('updateBooking', {
+                    action: 'booking',
+                    type: 'update',
+                    id: editingBookingId,
+                    booking_datetime: startDatetime,
+                    booking_end_datetime: endDatetime,
+                    bookingDate: date,
+                    bookingTime: time,
+                    bookingEndTime: bookingEndTime,
+                    startDatetime: startDatetime,
+                    endDatetime: endDatetime,
+                    originalDate: originalDate,
+                    originalTime: originalTime,
+                    originalEndTime: originalEndTime,
+                    memberName: name,
+                    memberPhone: phone,
+                    memberId: memberId,
+                    bookingType: document.getElementById('editBookingType').value || '',
+                    analystName: document.getElementById('editAnalystName').value || ''
                 });
-                
-                var result = await safeParseJSON(response);
-                
+
                 if (result.success) {
                     showToast('已更新');
                     closeEditModal();
@@ -1607,24 +1677,19 @@ if (editSelect.options.length <= 1) {
             showLoading('刪除中...');
             
             try {
-                var response = await fetch(CONFIG.MAKE_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'booking',
-                        type: 'delete',
-                        id: id,
-                        memberName: memberName || '',
-                        memberPhone: memberPhone || '',
-                        bookingDate: bookingDate || '',
-                        bookingTime: bookingTime || '',
-                        bookingType: bookingType || '',
-                        analystName: analystName || ''
-                    })
+                // 改由 Edge Function 直接從 moti_bookings 硬刪；moti-api 會用同樣 payload 轉送 Make 跑 Calendar + LINE
+                var result = await callEdge('deleteBooking', {
+                    action: 'booking',
+                    type: 'delete',
+                    id: id,
+                    memberName: memberName || '',
+                    memberPhone: memberPhone || '',
+                    bookingDate: bookingDate || '',
+                    bookingTime: bookingTime || '',
+                    bookingType: bookingType || '',
+                    analystName: analystName || ''
                 });
-                
-                var result = await safeParseJSON(response);
-                
+
                 if (result.success) {
                     showToast('已刪除');
                     loadBookings();
